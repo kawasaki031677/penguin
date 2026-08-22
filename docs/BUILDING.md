@@ -6,7 +6,7 @@ Debian-based Linux and the following packages are required:
 
 ```sh
 sudo apt update
-sudo apt install build-essential debhelper devscripts
+sudo apt install build-essential debhelper devscripts libcmocka-dev
 ```
 
 ## Manual Compilation
@@ -14,7 +14,7 @@ sudo apt install build-essential debhelper devscripts
 Run the following command from the project root:
 
 ```sh
-cc -std=c99 -Wall -Wextra -O2 -o src/penguin src/penguin.c
+cc -std=c99 -Wall -Wextra -O2 -o src/penguin src/penguin.c src/options.c
 ```
 
 The compiled binary is created at `src/penguin`.
@@ -28,6 +28,16 @@ dpkg-buildpackage -us -uc
 The generated `.deb` file is created in the directory above the project directory.
 
 ## Verification
+
+Run the cmocka unit tests with:
+
+```sh
+cc -std=c99 -Wall -Wextra -Werror -Isrc \
+	tests/test_options.c src/options.c \
+	$(pkg-config --cflags --libs cmocka) \
+	-o tests/test_options
+./tests/test_options
+```
 
 ```sh
 ./src/penguin --version

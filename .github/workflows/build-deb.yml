@@ -7,6 +7,13 @@ on:
     paths:
       - 'src/**'
       - 'debian/**'
+      - 'tests/**'
+      - '.github/workflows/build-deb.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'debian/**'
+      - 'tests/**'
       - '.github/workflows/build-deb.yml'
   workflow_dispatch:
 
@@ -29,7 +36,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y \
             build-essential \
-            debhelper-compat
+            debhelper-compat \
+            libcmocka-dev
 
       - name: Get package version
         id: package
@@ -49,6 +57,19 @@ jobs:
       - name: Build package
         run: dpkg-buildpackage -us -uc
 
+      - name: Run smoke tests
+        run: |
+          ./penguin --version
+          ./penguin --help
+
+      - name: Run unit tests
+        run: |
+          cc -std=c99 -Wall -Wextra -Werror -Isrc \
+            tests/test_options.c src/options.c \
+            $(pkg-config --cflags --libs cmocka) \
+            -o tests/test_options
+          ./tests/test_options
+
       - name: Check package
         run: |
           deb=$(find .. -maxdepth 1 -type f -name '*.deb' | head -n 1)
@@ -62,6 +83,7 @@ jobs:
 
       - name: Prepare packages
         id: prepare
+        if: github.event_name == 'push'
         env:
           VERSION: ${{ steps.package.outputs.version }}
         run: |
@@ -82,6 +104,7 @@ jobs:
           echo "latest_file=$latest_file" >> "$GITHUB_OUTPUT"
 
       - name: Create versioned GitHub Release
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.package.outputs.tag }}
@@ -101,6 +124,7 @@ jobs:
           fi
 
       - name: Remove latest package from old releases
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
           CURRENT_TAG: ${{ steps.package.outputs.tag }}
@@ -125,6 +149,7 @@ jobs:
           done
 
       - name: Add latest package to current release
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.package.outputs.tag }}

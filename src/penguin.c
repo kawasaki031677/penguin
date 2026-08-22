@@ -9,7 +9,9 @@
 #include <time.h>
 #include <unistd.h>
 
-#define VERSION "0.1.3"
+#include "options.h"
+
+#define VERSION "0.1.4"
 #define PENGUIN_HEIGHT 5
 #define PENGUIN_WIDTH 9
 #define FRAME_COUNT 2
@@ -215,21 +217,22 @@ static void fly(void) {
 
 int main(int argc, char **argv) {
     const char *option = argc > 1 ? argv[1] : "";
+    PenguinOption parsed_option = parse_option(option);
 
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
 
-    if (strcmp(option, "") == 0) {
+    if (parsed_option == PENGUIN_OPTION_DEFAULT) {
         show_penguin();
-    } else if (strcmp(option, "-h") == 0 || strcmp(option, "--help") == 0) {
+    } else if (parsed_option == PENGUIN_OPTION_HELP) {
         show_help();
-    } else if (strcmp(option, "-v") == 0 || strcmp(option, "--version") == 0) {
+    } else if (parsed_option == PENGUIN_OPTION_VERSION) {
         puts("penguin " VERSION);
-    } else if (strcmp(option, "--dance") == 0) {
+    } else if (parsed_option == PENGUIN_OPTION_DANCE) {
         dance();
-    } else if (strcmp(option, "--run") == 0) {
+    } else if (parsed_option == PENGUIN_OPTION_RUN) {
         run_penguin();
-    } else if (strcmp(option, "--fly") == 0) {
+    } else if (parsed_option == PENGUIN_OPTION_FLY) {
         fly();
     } else {
         fprintf(stderr, "penguin: unknown option: %s\n", option);

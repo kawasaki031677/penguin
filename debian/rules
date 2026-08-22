@@ -4,7 +4,7 @@
 	dh $@
 
 override_dh_auto_build:
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -std=c99 -Wall -Wextra -O2 -o penguin src/penguin.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -std=c99 -Wall -Wextra -O2 -o penguin src/penguin.c src/options.c
 
 override_dh_auto_install:
 	install -D -m 0755 penguin debian/penguin/usr/bin/penguin
