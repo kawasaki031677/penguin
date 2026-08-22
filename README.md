@@ -1,6 +1,6 @@
 # penguin <img src="./image/tux.png" width="30" alt="Tux"> 
 
-A terminal penguin command inspired by Tux, Linux's official mascot.
+A terminal penguin command inspired by Tux, Linux's official mascot.  
 Distributed as a `.deb` package for Debian-based Linux systems.
 
 <img src="./image/demo.gif" width="600" alt="penguin demo">
@@ -15,6 +15,7 @@ Distributed as a `.deb` package for Debian-based Linux systems.
 Download the `.deb` file and install it with the following command:
 
 ```sh
+curl -fL https://github.com/kawasaki031677/penguin/releases/latest/download/penguin_latest_amd64.deb
 sudo apt install ./penguin_*.deb
 ```
 
