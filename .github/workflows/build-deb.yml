@@ -100,38 +100,29 @@ jobs:
               --generate-notes
           fi
 
-      - name: Find previous latest release
-        id: previous
+      - name: Remove latest package from old releases
         env:
           GH_TOKEN: ${{ github.token }}
           CURRENT_TAG: ${{ steps.package.outputs.tag }}
         run: |
-          previous_tag=$(gh release list \
-            --exclude-drafts \
-            --exclude-pre-releases \
-            --limit 20 \
-            --json tagName,isLatest \
-            --jq '.[] | select(.isLatest == false) | .tagName' \
-            | grep '^v' \
-            | grep -v "^${CURRENT_TAG}$" \
-            | head -n 1 || true)
+          echo "Removing penguin_latest_amd64.deb from old releases..."
 
-          echo "Previous release: $previous_tag"
+          gh release list \
+            --limit 100 \
+            --json tagName \
+            --jq '.[].tagName' |
+          while read -r tag; do
+            if [ "$tag" = "$CURRENT_TAG" ]; then
+              continue
+            fi
 
-          echo "tag=$previous_tag" >> "$GITHUB_OUTPUT"
+            echo "Checking release: $tag"
 
-      - name: Remove latest package from previous release
-        if: steps.previous.outputs.tag != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PREVIOUS_TAG: ${{ steps.previous.outputs.tag }}
-        run: |
-          echo "Removing penguin_latest_amd64.deb from $PREVIOUS_TAG"
-
-          gh release delete-asset \
-            "$PREVIOUS_TAG" \
-            penguin_latest_amd64.deb \
-            --yes || true
+            gh release delete-asset \
+              "$tag" \
+              penguin_latest_amd64.deb \
+              --yes || true
+          done
 
       - name: Add latest package to current release
         env:
@@ -139,6 +130,8 @@ jobs:
           TAG: ${{ steps.package.outputs.tag }}
           LATEST_FILE: ${{ steps.prepare.outputs.latest_file }}
         run: |
+          echo "Uploading latest package to $TAG..."
+
           gh release upload "$TAG" \
             "$LATEST_FILE" \
             --clobber
