@@ -1,3 +1,9 @@
+penguin (0.1.1-1) unstable; urgency=medium
+
+  * test
+
+ -- kawasaki031677 <73537046+kawasaki031677@users.noreply.github.com>  Sat, 22 Aug 2026 20:19:00 +0900
+
 penguin (0.1.0-1) unstable; urgency=medium
 
   * Initial release.

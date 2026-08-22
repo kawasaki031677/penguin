@@ -56,19 +56,26 @@ jobs:
           dpkg-deb --info "$deb"
           dpkg-deb --contents "$deb"
 
-      - name: Prepare package
+      - name: Prepare packages
         id: prepare
+        env:
+          VERSION: ${{ steps.package.outputs.version }}
         run: |
           deb=$(find .. -maxdepth 1 -type f -name '*.deb' | head -n 1)
 
-          filename=$(basename "$deb")
+          test -n "$deb"
 
-          echo "Package: $filename"
+          versioned_file="penguin_${VERSION}_amd64.deb"
+          latest_file="penguin_latest_amd64.deb"
 
-          cp "$deb" "$filename"
-          cp "$deb" penguin_amd64.deb
+          cp "$deb" "$versioned_file"
+          cp "$deb" "$latest_file"
 
-          echo "versioned_file=$filename" >> "$GITHUB_OUTPUT"
+          echo "Versioned package: $versioned_file"
+          echo "Latest package: $latest_file"
+
+          echo "versioned_file=$versioned_file" >> "$GITHUB_OUTPUT"
+          echo "latest_file=$latest_file" >> "$GITHUB_OUTPUT"
 
       - name: Create versioned GitHub Release
         env:
@@ -92,18 +99,19 @@ jobs:
       - name: Update latest GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          LATEST_FILE: ${{ steps.prepare.outputs.latest_file }}
         run: |
           if gh release view latest >/dev/null 2>&1; then
-            echo "Updating existing latest release."
+            echo "Updating latest release."
 
             gh release upload latest \
-              penguin_amd64.deb \
+              "$LATEST_FILE" \
               --clobber
           else
             echo "Creating latest release."
 
             gh release create latest \
-              penguin_amd64.deb \
+              "$LATEST_FILE" \
               --title "Latest" \
               --notes "Latest build from main."
           fi
