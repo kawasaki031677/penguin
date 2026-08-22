@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'src/**'
+      - 'debian/**'
+      - '.github/workflows/build-deb.yml'
   workflow_dispatch:
 
 permissions:
@@ -96,22 +100,45 @@ jobs:
               --generate-notes
           fi
 
-      - name: Update latest GitHub Release
+      - name: Find previous latest release
+        id: previous
         env:
           GH_TOKEN: ${{ github.token }}
+          CURRENT_TAG: ${{ steps.package.outputs.tag }}
+        run: |
+          previous_tag=$(gh release list \
+            --exclude-drafts \
+            --exclude-pre-releases \
+            --limit 20 \
+            --json tagName,isLatest \
+            --jq '.[] | select(.isLatest == false) | .tagName' \
+            | grep '^v' \
+            | grep -v "^${CURRENT_TAG}$" \
+            | head -n 1 || true)
+
+          echo "Previous release: $previous_tag"
+
+          echo "tag=$previous_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Remove latest package from previous release
+        if: steps.previous.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREVIOUS_TAG: ${{ steps.previous.outputs.tag }}
+        run: |
+          echo "Removing penguin_latest_amd64.deb from $PREVIOUS_TAG"
+
+          gh release delete-asset \
+            "$PREVIOUS_TAG" \
+            penguin_latest_amd64.deb \
+            --yes || true
+
+      - name: Add latest package to current release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.package.outputs.tag }}
           LATEST_FILE: ${{ steps.prepare.outputs.latest_file }}
         run: |
-          if gh release view latest >/dev/null 2>&1; then
-            echo "Updating latest release."
-
-            gh release upload latest \
-              "$LATEST_FILE" \
-              --clobber
-          else
-            echo "Creating latest release."
-
-            gh release create latest \
-              "$LATEST_FILE" \
-              --title "Latest" \
-              --notes "Latest build from main."
-          fi
+          gh release upload "$TAG" \
+            "$LATEST_FILE" \
+            --clobber
