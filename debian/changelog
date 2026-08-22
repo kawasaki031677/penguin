@@ -1,0 +1,6 @@
+penguin (0.1.0-1) unstable; urgency=medium
+
+  * Initial release.
+  * Add the C penguin command and terminal animations.
+
+ -- kawasaki031677 <73537046+kawasaki031677@users.noreply.github.com>  Sat, 22 Aug 2026 10:00:00 +0900

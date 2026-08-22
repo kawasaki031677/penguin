@@ -1,0 +1,16 @@
+# Build output
+src/penguin
+penguin
+
+# Debian package build artifacts
+*.deb
+*.buildinfo
+*.changes
+*.dsc
+*.tar.*
+
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/*.substvars
+debian/penguin/

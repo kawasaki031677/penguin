@@ -1,0 +1,13 @@
+Source: penguin
+Section: misc
+Priority: optional
+Maintainer: kawasaki031677 <73537046+kawasaki031677@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 13), build-essential
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
+
+Package: penguin
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: A useless Linux penguin command
+ A tiny joke command that makes a penguin appear in your terminal.
