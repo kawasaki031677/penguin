@@ -37,9 +37,12 @@ jobs:
           dpkg-deb --info "$deb"
           dpkg-deb --contents "$deb"
 
+      - name: Stage Debian package
+        run: cp ../*.deb .
+
       - name: Upload Debian package
         uses: actions/upload-artifact@v4
         with:
           name: penguin-deb
-          path: ../*.deb
+          path: '*.deb'
           if-no-files-found: error
