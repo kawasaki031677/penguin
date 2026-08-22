@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   DEBIAN_FRONTEND: noninteractive
@@ -27,22 +27,83 @@ jobs:
             build-essential \
             debhelper-compat
 
+      - name: Get package version
+        id: package
+        run: |
+          version=$(dpkg-parsechangelog -S Version)
+
+          if [ -z "$version" ]; then
+            echo "Could not determine package version."
+            exit 1
+          fi
+
+          echo "Package version: $version"
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
       - name: Build package
         run: dpkg-buildpackage -us -uc
 
       - name: Check package
         run: |
           deb=$(find .. -maxdepth 1 -type f -name '*.deb' | head -n 1)
+
           test -n "$deb"
+
+          echo "Built package: $deb"
+
           dpkg-deb --info "$deb"
           dpkg-deb --contents "$deb"
 
-      - name: Stage Debian package
-        run: cp ../*.deb .
+      - name: Prepare package
+        id: prepare
+        run: |
+          deb=$(find .. -maxdepth 1 -type f -name '*.deb' | head -n 1)
 
-      - name: Upload Debian package
-        uses: actions/upload-artifact@v4
-        with:
-          name: penguin-deb
-          path: '*.deb'
-          if-no-files-found: error
+          filename=$(basename "$deb")
+
+          echo "Package: $filename"
+
+          cp "$deb" "$filename"
+          cp "$deb" penguin_amd64.deb
+
+          echo "versioned_file=$filename" >> "$GITHUB_OUTPUT"
+
+      - name: Create versioned GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.package.outputs.tag }}
+          VERSIONED_FILE: ${{ steps.prepare.outputs.versioned_file }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists."
+
+            gh release upload "$TAG" \
+              "$VERSIONED_FILE" \
+              --clobber
+          else
+            gh release create "$TAG" \
+              "$VERSIONED_FILE" \
+              --title "$TAG" \
+              --generate-notes
+          fi
+
+      - name: Update latest GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view latest >/dev/null 2>&1; then
+            echo "Updating existing latest release."
+
+            gh release upload latest \
+              penguin_amd64.deb \
+              --clobber
+          else
+            echo "Creating latest release."
+
+            gh release create latest \
+              penguin_amd64.deb \
+              --title "Latest" \
+              --notes "Latest build from main."
+          fi
