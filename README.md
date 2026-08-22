@@ -15,8 +15,9 @@ Distributed as a `.deb` package for Debian-based Linux systems.
 Download the `.deb` file and install it with the following command:
 
 ```sh
-curl -fL https://github.com/kawasaki031677/penguin/releases/latest/download/penguin_latest_amd64.deb
-sudo apt install ./penguin_*.deb
+cd /tmp
+curl -fL -o penguin_latest_amd64.deb https://github.com/kawasaki031677/penguin/releases/latest/download/penguin_latest_amd64.deb
+sudo apt install ./penguin_latest_amd64.deb
 ```
 
 To uninstall:
