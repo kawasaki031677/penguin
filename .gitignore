@@ -1,6 +1,7 @@
 # Build output
 src/penguin
 penguin
+tests/test_options
 
 # Debian package build artifacts
 *.deb
