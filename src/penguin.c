@@ -9,7 +9,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#define VERSION "0.1.0"
+#define VERSION "0.1.1"
 #define PENGUIN_HEIGHT 5
 #define PENGUIN_WIDTH 9
 #define FRAME_COUNT 2
